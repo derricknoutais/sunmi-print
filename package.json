@@ -20,6 +20,7 @@
     "sideEffects": false,
     "files": [
         "dist",
+        "polices/LICENSE-Roboto.txt",
         "README.md"
     ],
     "scripts": {

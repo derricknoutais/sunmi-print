@@ -27,8 +27,15 @@ await build({
     target: ['chrome62'],
     minify: true,
     legalComments: 'eof',
+    // Ce que le bundle embarque d'autrui, et à quelles conditions.
+    banner: {
+        js: '/*! sunmi-print — page de test. Embarque qrcode-generator (© 2009 Kazuhiko Arase, licence MIT : '
+            + 'LICENSE-qrcode-generator.txt) et Roboto (© The Roboto Project Authors, SIL Open Font License 1.1 : LICENSE-Roboto.txt). */',
+    },
     logLevel: 'warning',
 });
 copyFileSync(chemin('demo/index.html'), `${sortie}/index.html`);
+copyFileSync(chemin('polices/LICENSE-Roboto.txt'), `${sortie}/LICENSE-Roboto.txt`);
+copyFileSync(chemin('licences/qrcode-generator.txt'), `${sortie}/LICENSE-qrcode-generator.txt`);
 
 console.log('  ✓ page de test → android/app/src/main/assets/test/');
