@@ -16,7 +16,8 @@ La page dessine le reçu en image noir et blanc, avec la police livrée par le p
 
 - **Une page web ne peut pas parler à l'imprimante.** Le service d'impression Sunmi n'est ouvert qu'aux applications Android : il faut l'application Sunmi Print sur le terminal.
 - **Un Sunmi V2 Pro a deux moteurs web.** Son navigateur est un Chromium **74** — c'est là que tournent vos applications. Mais les applications Android affichent leurs pages avec le WebView du système, resté en version **62** : une application Vite n'y démarre même pas (l'import dynamique date de Chrome 63). Relevé sur un V2 Pro sous Android 7.1.2 : `org.chromium.chrome` 74.0.3710, `com.google.android.webview` 62.0.3202.
-- D'où le mode à préférer : **l'application web reste dans le navigateur**, et Sunmi Print, en service de fond, reçoit les reçus sur `http://127.0.0.1:17321`. Une requête d'une page https vers l'adresse de boucle locale n'est pas du contenu mixte.
+- D'où le mode à préférer : **l'application web reste dans le navigateur**, et Sunmi Print, en service de fond, reçoit les reçus sur `http://127.0.0.1:17321`. Une requête d'une page https vers l'adresse de boucle locale n'est pas du contenu mixte — vérifié dans le Chromium 74 du V2 Pro.
+- **Attention au navigateur par défaut** : sur ce V2 Pro, un lien https s'ouvre dans un vieux Chrome **56** (`com.android.chrome`), où une application Vite ne démarre pas. Ouvrir les applications depuis **Chromium** (raccourci sur l'écran d'accueil, ou Chromium comme navigateur par défaut).
 - **58 mm = 384 points** à 203 dpi (80 mm = 576). Pas de massicot sur un V2 Pro : le papier avance de quelques lignes pour se détacher à la barre.
 - **Du texte envoyé tel quel à une imprimante thermique dépend de sa page de codes** : « PAYÉ » peut sortir « PAYÃ‰ ». Une image, jamais.
 
@@ -183,6 +184,17 @@ npm test          # compile, puis 69 tests : mise en page, dessin (Skia et la vr
 - `npm run police` régénère `src/police-donnees.ts` depuis `polices/` — Roboto Medium et Bold, jeu latin, SIL Open Font License.
 - Sur un émulateur ou un téléphone, Sunmi Print passe en **simulation** : le pont affiche le reçu au lieu de l'imprimer, le service le garde dans `derniere-impression.png` (`adb pull /sdcard/Android/data/com.derricknoutais.sunmiprint/files/derniere-impression.png`).
 - Version de développement : `chrome://inspect` depuis le poste, terminal branché en USB, pour déboguer la page ouverte dans l'application.
+
+## Vérifié sur un vrai terminal
+
+Sunmi V2 Pro (Android 7.1.2, imprimante POS-V2, 58 mm), le 28 septembre 2026 :
+
+| Chemin | Moteur | Résultat |
+|---|---|---|
+| page de test dans Sunmi Print, pont direct | WebView 62 | reçu d'exemple imprimé (2,5 s), mire imprimée (3,1 s) |
+| page **https** dans le navigateur → `http://127.0.0.1:17321` | Chromium 74 | service détecté, reçu imprimé (2,3 s) |
+
+Les durées sont celles du verdict de l'imprimante, papier sorti.
 
 ## Limites connues
 

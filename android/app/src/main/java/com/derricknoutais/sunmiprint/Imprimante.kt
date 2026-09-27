@@ -165,8 +165,9 @@ class Imprimante(private val contexte: Context) {
         LARGEUR_58MM
     }
 
+    /** Le V2 Pro répond « POS-V2 » suivi d'un retour à la ligne. */
     private fun modele(s: SunmiPrinterService): String? = try {
-        s.printerModal
+        s.printerModal?.trim()?.takeIf { it.isNotEmpty() }
     } catch (e: Exception) {
         null
     }
