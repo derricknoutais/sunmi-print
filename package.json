@@ -1,0 +1,49 @@
+{
+    "name": "@derricknoutais/sunmi-print",
+    "version": "0.1.0",
+    "description": "Imprimer des reçus sur l'imprimante intégrée des terminaux Sunmi depuis une application web — rendu du reçu en image dans la page, impression par une application Android. Compatible avec le WebView Chrome 74 des terminaux.",
+    "type": "module",
+    "private": true,
+    "license": "UNLICENSED",
+    "author": "Derrick Noutais",
+    "exports": {
+        ".": {
+            "types": "./dist/index.d.ts",
+            "default": "./dist/index.js"
+        },
+        "./vue": {
+            "types": "./dist/vue.d.ts",
+            "default": "./dist/vue.js"
+        },
+        "./package.json": "./package.json"
+    },
+    "sideEffects": false,
+    "files": [
+        "dist",
+        "README.md"
+    ],
+    "scripts": {
+        "build": "tsc -p tsconfig.json && node scripts/construire-demo.mjs",
+        "test": "npm run build && node --test test/*.test.mjs",
+        "police": "node scripts/generer-police.mjs"
+    },
+    "peerDependencies": {
+        "vue": "^3.2"
+    },
+    "peerDependenciesMeta": {
+        "vue": {
+            "optional": true
+        }
+    },
+    "dependencies": {
+        "qrcode-generator": "2.0.4"
+    },
+    "devDependencies": {
+        "@napi-rs/canvas": "^1.0.9",
+        "@zxing/library": "0.21.3",
+        "esbuild": "^0.28.2",
+        "semver": "^7.8.5",
+        "typescript": "5.9.3",
+        "vue": "^3.5.43"
+    }
+}

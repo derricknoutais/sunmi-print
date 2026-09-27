@@ -1,0 +1,22 @@
+export type {
+    Alignement,
+    Bloc,
+    BlocEspace,
+    BlocImage,
+    BlocLigne,
+    BlocQr,
+    BlocSeparateur,
+    BlocTexte,
+    Recu,
+    Taille,
+} from './document.ts';
+export { dessinerRecu, environnementNavigateur, type Environnement, type ImageChargee, type OptionsDessin, type Toile } from './dessin.ts';
+export { rasterEscPos, versEscPos } from './escpos.ts';
+export { ErreurImpression, type CodeEtat, type EtatImprimante, type ResultatImpression, type Transport } from './etat.ts';
+export { mire, recuExemple } from './exemples.ts';
+export { apercuRecu, etatImprimante, imprimerRecu, type OptionsImpression } from './imprimer.ts';
+export { LARGEUR_58MM, LARGEUR_80MM, TAILLES } from './metriques.ts';
+export { montant } from './montant.ts';
+export { chargerPolice, FAMILLE } from './police.ts';
+export { pontDisponible, VERSION_PONT, versionPont } from './pont.ts';
+export { PORT_PAR_DEFAUT, type OptionsServeur } from './serveur.ts';

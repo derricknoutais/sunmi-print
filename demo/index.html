@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Test d'impression</title>
+<style>
+    /* Chrome 74 : ni `gap` en flexbox, ni :is(), ni inset — des marges. */
+    :root { --encre: #1c1917; --doux: #78716c; --fond: #f5f5f4; --carte: #fff; --accent: #115e6b; --erreur: #b91c1c; --ok: #15803d; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font: 15px/1.45 system-ui, -apple-system, Roboto, sans-serif; color: var(--encre); background: var(--fond); }
+    main { max-width: 480px; margin: 0 auto; padding: 16px; }
+    h1 { font-size: 20px; margin: 0 0 4px; }
+    .sous-titre { color: var(--doux); margin: 0 0 16px; }
+    .carte { background: var(--carte); border: 1px solid #e7e5e4; border-radius: 10px; padding: 12px 14px; margin-bottom: 12px; }
+    .ligne { display: flex; justify-content: space-between; align-items: baseline; }
+    .ligne + .ligne { margin-top: 4px; }
+    .ligne span:first-child { color: var(--doux); margin-right: 12px; }
+    .etat-prete { color: var(--ok); font-weight: 600; }
+    .etat-autre { color: var(--erreur); font-weight: 600; }
+    .boutons { display: flex; flex-wrap: wrap; margin: 0 -4px 12px; }
+    .boutons button { flex: 1 1 auto; margin: 4px; }
+    button { font: inherit; font-weight: 600; padding: 12px 14px; border-radius: 8px; border: 1px solid #d6d3d1; background: var(--carte); color: var(--encre); }
+    button.principal { background: var(--accent); border-color: var(--accent); color: #fff; }
+    button:disabled { opacity: .5; }
+    .apercu { background: #fff; border: 1px solid #e7e5e4; border-radius: 10px; padding: 12px 0; display: flex; justify-content: center; margin-bottom: 12px; }
+    .apercu canvas { display: block; width: 100%; max-width: 384px; image-rendering: pixelated; }
+    #journal { list-style: none; margin: 0; padding: 0; font-size: 13px; }
+    #journal li { padding: 6px 0; border-top: 1px solid #f5f5f4; }
+    #journal li:first-child { border-top: 0; }
+    #journal .ok { color: var(--ok); }
+    #journal .erreur { color: var(--erreur); }
+    #journal time { color: var(--doux); margin-right: 8px; font-variant-numeric: tabular-nums; }
+</style>
+</head>
+<body>
+<main>
+    <h1>Test d'impression</h1>
+    <p class="sous-titre">sunmi-print — ce qui s'affiche ici est exactement ce qui sort de l'imprimante.</p>
+
+    <section class="carte" aria-label="État">
+        <div class="ligne"><span>Application</span><strong id="pont">…</strong></div>
+        <div class="ligne"><span>Imprimante</span><strong id="etat">…</strong></div>
+        <div class="ligne"><span>Largeur</span><strong id="largeur">…</strong></div>
+    </section>
+
+    <div class="boutons">
+        <button type="button" id="voir-recu">Reçu d'exemple</button>
+        <button type="button" id="voir-mire">Mire</button>
+        <button type="button" id="actualiser">Actualiser l'état</button>
+    </div>
+    <div class="boutons">
+        <button type="button" id="imprimer" class="principal">Imprimer</button>
+    </div>
+
+    <div class="apercu" id="apercu" aria-label="Aperçu du reçu"></div>
+
+    <section class="carte" aria-label="Journal">
+        <ul id="journal"></ul>
+    </section>
+</main>
+<script src="demo.js"></script>
+</body>
+</html>

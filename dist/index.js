@@ -1,0 +1,10 @@
+export { dessinerRecu, environnementNavigateur } from "./dessin.js";
+export { rasterEscPos, versEscPos } from "./escpos.js";
+export { ErreurImpression } from "./etat.js";
+export { mire, recuExemple } from "./exemples.js";
+export { apercuRecu, etatImprimante, imprimerRecu } from "./imprimer.js";
+export { LARGEUR_58MM, LARGEUR_80MM, TAILLES } from "./metriques.js";
+export { montant } from "./montant.js";
+export { chargerPolice, FAMILLE } from "./police.js";
+export { pontDisponible, VERSION_PONT, versionPont } from "./pont.js";
+export { PORT_PAR_DEFAUT } from "./serveur.js";
