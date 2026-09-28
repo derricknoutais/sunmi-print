@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Android 11 et plus : sans cette déclaration, le service d'impression
+         Sunmi reste invisible et la liaison échoue en silence (V2s, V3…).
+         Fusionnée dans le manifeste de l'application qui utilise ce pilote. -->
+    <queries>
+        <package android:name="woyou.aidlservice.jiqiservice" />
+    </queries>
+</manifest>

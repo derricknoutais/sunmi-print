@@ -22,4 +22,4 @@ dependencyResolutionManagement {
 }
 
 rootProject.name = "sunmi-print"
-include(":app")
+include(":pilote")
