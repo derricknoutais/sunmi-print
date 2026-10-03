@@ -2,12 +2,16 @@ package com.derricknoutais.sunmiprint
 
 import android.content.Context
 import android.graphics.Bitmap
+import android.os.Build
 import android.util.Log
 import com.sunmi.peripheral.printer.InnerPrinterCallback
+import com.sunmi.peripheral.printer.InnerPrinterException
 import com.sunmi.peripheral.printer.InnerPrinterManager
 import com.sunmi.peripheral.printer.InnerResultCallback
 import com.sunmi.peripheral.printer.SunmiPrinterService
+import com.sunmi.peripheral.printer.SystemPropertyUtil
 import org.json.JSONObject
+import java.util.Locale
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.Executors
 import java.util.concurrent.TimeUnit
@@ -17,11 +21,12 @@ import java.util.concurrent.atomic.AtomicBoolean
  * Le pilote de l'imprimante intégrée des terminaux Sunmi, par leur service
  * d'impression (woyou.aidlservice.jiqiservice).
  *
- * Il ne fait qu'une chose : dire l'état de l'imprimante et imprimer une image.
- * Il parle le vocabulaire commun aux pilotes d'ecoprint — un état
+ * Il dit l'état de l'imprimante, imprime une image et ouvre le tiroir-caisse
+ * branché sur le terminal. Il parle le vocabulaire commun aux pilotes d'ecoprint — un état
  * `{code, message, largeur, modele}`, un verdict `{ok}` ou
  * `{ok: false, code, message}` —, les codes étant `prete`, `papier`,
- * `surchauffe`, `capot`, `occupee`, `erreur`, `absente`, `delai`.
+ * `surchauffe`, `capot`, `occupee`, `erreur`, `absente`, `delai`, et
+ * `non-pris-en-charge` (tiroir-caisse sur un terminal qui n'en pilote pas).
  *
  * Chaque reçu part en mode « transaction » : les commandes s'accumulent dans
  * un tampon, puis l'imprimante rend un verdict sur le reçu entier — sorti, ou
@@ -35,8 +40,11 @@ class ImprimanteSunmi(private val contexte: Context) {
     @Volatile
     private var lie = false
 
-    /** Un reçu à la fois : le suivant attend le verdict du précédent. */
+    /** Un reçu à la fois — et le tiroir-caisse dans la même file : le suivant attend le verdict du précédent. */
     private val file = Executors.newSingleThreadExecutor()
+
+    /** Le délai d'accusé du tiroir, compté hors de la file : le reçu suivant n'attend pas. */
+    private val minuteur = Executors.newSingleThreadScheduledExecutor()
 
     private val liaison = object : InnerPrinterCallback() {
         override fun onConnected(connecte: SunmiPrinterService) {
@@ -152,6 +160,79 @@ class ImprimanteSunmi(private val contexte: Context) {
         }
     }
 
+    /**
+     * Ce terminal a-t-il une prise de tiroir-caisse ? Les Sunmi de comptoir
+     * (T1, T2, D2, D3…) en ont une ; les portables (V2, V2 Pro, P2, L2…), non —
+     * sauf le V3 MIX, dont la base en a une : le SDK l'ouvre par une commande
+     * à part, et détaché de sa base il n'en a plus. Le service Sunmi ne le dit
+     * pas : on le lit dans le modèle, et `null` pour le MIX, un modèle inconnu
+     * ou une autre marque qui a repris le service — l'essai tranche.
+     */
+    fun aUnTiroir(): Boolean? {
+        if (!Build.MANUFACTURER.equals("SUNMI", ignoreCase = true)) return null
+        val materiel = try {
+            SystemPropertyUtil.getProperty("ro.sunmi.hardware", "")
+        } catch (e: Exception) {
+            ""
+        }.uppercase(Locale.ENGLISH)
+        val modele = Build.MODEL.trim().uppercase(Locale.ENGLISH)
+        if ("MIX" in materiel || "MIX" in modele) return null
+        return when (modele.firstOrNull()) {
+            'V', 'P', 'L' -> false
+            'T', 'D' -> true
+            else -> null
+        }
+    }
+
+    /**
+     * Ouvre le tiroir-caisse (`openDrawer()` du service Sunmi) et appelle
+     * `fini` une seule fois. Passe par la file des reçus, sans la retenir :
+     * demandé juste avant un reçu, il s'ouvre d'abord, et le reçu part aussitôt
+     * après — sans attendre l'accusé du service.
+     */
+    fun ouvrirTiroir(fini: (JSONObject) -> Unit) {
+        file.execute { ouvrirTiroirMaintenant(fini) }
+    }
+
+    private fun ouvrirTiroirMaintenant(fini: (JSONObject) -> Unit) {
+        if (aUnTiroir() == false) return fini(echec("non-pris-en-charge", "Ce terminal n'a pas de prise de tiroir-caisse."))
+        val s = service ?: return fini(echec("occupee", "Imprimante pas encore connectée : réessayer dans un instant."))
+
+        val dejaRendu = AtomicBoolean(false)
+        val rendre = { resultat: JSONObject ->
+            if (dejaRendu.compareAndSet(false, true)) fini(resultat)
+        }
+
+        try {
+            s.openDrawer(object : InnerResultCallback() {
+                override fun onRunResult(reussi: Boolean) {
+                    rendre(if (reussi) JSONObject().put("ok", true) else echec("erreur", "Le tiroir-caisse ne s'est pas ouvert."))
+                }
+
+                override fun onReturnString(resultat: String?) {}
+
+                override fun onRaiseException(code: Int, message: String?) {
+                    rendre(echec("erreur", message ?: "Tiroir-caisse : erreur $code."))
+                }
+
+                override fun onPrintResult(code: Int, message: String?) {}
+            })
+        } catch (e: InnerPrinterException) {
+            // Le SDK refuse avant d'envoyer quoi que ce soit : « ce modèle, ou
+            // cette version, ne prend pas en charge cette méthode ».
+            return rendre(echec("non-pris-en-charge", "Ce terminal ne pilote pas de tiroir-caisse : ${e.message}"))
+        } catch (e: Exception) {
+            return rendre(echec("erreur", "Tiroir-caisse injoignable : ${e.message}"))
+        }
+
+        // Selon les versions du service, l'ordre part sans accusé : passé ce
+        // délai, on le tient pour envoyé. Compté à part, pour libérer la file.
+        minuteur.schedule({
+            if (!dejaRendu.get()) Log.i(JOURNAL, "tiroir : pas d'accusé du service en $DELAI_TIROIR_S s, ordre tenu pour envoyé")
+            rendre(JSONObject().put("ok", true))
+        }, DELAI_TIROIR_S, TimeUnit.SECONDS)
+    }
+
     /** Une image plus large que le papier est réduite ; jamais agrandie. */
     private fun ajuster(image: Bitmap, largeur: Int): Bitmap {
         if (image.width <= largeur) return image
@@ -210,5 +291,6 @@ class ImprimanteSunmi(private val contexte: Context) {
         const val LARGEUR_80MM = 576
         private const val HAUTEUR_TRANCHE = 800
         private const val DELAI_VERDICT_S = 60L
+        private const val DELAI_TIROIR_S = 2L
     }
 }

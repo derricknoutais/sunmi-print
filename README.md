@@ -1,6 +1,6 @@
 # sunmi-print
 
-Le **pilote de l'imprimante intégrée des terminaux Sunmi** (V2 Pro, V2s, P2, T2…), pour une application Android : dire l'état de l'imprimante, imprimer une image.
+Le **pilote de l'imprimante intégrée des terminaux Sunmi** (V2 Pro, V2s, P2, T2…), pour une application Android : dire l'état de l'imprimante, imprimer une image, ouvrir le tiroir-caisse.
 
 C'est l'un des pilotes de [ecoprint](https://github.com/derricknoutais/ecoprint), l'application qui reconnaît le terminal et imprime les reçus des applications web. Le pilote ZCS, [zcs-print](https://github.com/derricknoutais/zcs-print), a la même forme.
 
@@ -16,12 +16,16 @@ if (imprimante.demarrer()) {                  // faux si l'appareil n'a pas le s
     imprimante.imprimer(bitmap, 3) { verdict ->
         // {"ok":true}, ou {"ok":false,"code":"papier","message":"Plus de papier."}
     }
+    imprimante.aUnTiroir()                     // true sur un T2, false sur un V2 Pro, null si inconnu
+    imprimante.ouvrirTiroir { verdict -> }     // {"ok":true}, ou {"ok":false,"code":"non-pris-en-charge",…}
 }
 ```
 
 - **`demarrer()`** se lie au service d'impression Sunmi (`woyou.aidlservice.jiqiservice`, par le SDK `com.sunmi:printerlibrary`). La connexion prend un instant : l'état vaut `occupee` d'ici là.
 - **`imprimer(image, avance, fini)`** imprime en **mode transaction** : les commandes s'accumulent dans un tampon, puis l'imprimante rend un verdict sur le reçu entier. `fini` est appelé une seule fois, quand le reçu est **sorti**, ou avec la raison de l'échec. Un long reçu part en tranches de 800 lignes ; une image plus large que le papier est réduite.
-- Les reçus passent un par un : le suivant attend le verdict du précédent.
+- **`ouvrirTiroir(fini)`** ouvre le tiroir-caisse branché sur le terminal (`openDrawer()`). Selon les versions du service, l'ordre part sans accusé : sans réponse en 2 s, il est tenu pour envoyé — délai compté hors de la file, un reçu demandé juste après part aussitôt. Si le SDK refuse la méthode pour ce modèle ou cette version du service, le verdict est `non-pris-en-charge`.
+- **`aUnTiroir()`** : le service ne dit pas si le terminal a une prise de tiroir-caisse. Le pilote le lit dans le modèle — les Sunmi de comptoir (T…, D…) en ont une, les portables (V…, P…, L…) non, sauf le V3 MIX dont la base en a une — et rend `null` pour le MIX, un modèle inconnu ou une autre marque. Sur un portable, `ouvrirTiroir` rend `non-pris-en-charge` sans rien envoyer.
+- Les reçus et le tiroir passent par la même file, un par un : le suivant attend le verdict du précédent.
 
 L'état et le verdict sont du JSON (`org.json`), dans le vocabulaire commun aux pilotes d'ecoprint :
 
@@ -35,6 +39,7 @@ L'état et le verdict sont du JSON (`org.json`), dans le vocabulaire commun aux 
 | `absente` | 505, ou pas de service Sunmi sur l'appareil |
 | `erreur` | 3, 7, 507, ou un état inconnu |
 | `delai` | aucun verdict en 60 s |
+| `non-pris-en-charge` | tiroir-caisse demandé sur un terminal portable, ou refusé par le SDK Sunmi (modèle ou version du service qui ne le pilote pas) |
 
 `largeur` vaut 384 points en 58 mm, 576 en 80 mm (`getPrinterPaper()`).
 
