@@ -2,9 +2,9 @@
 
 Le **pilote de l'imprimante intégrée des terminaux Sunmi** (V2 Pro, V2s, P2, T2…), pour une application Android : dire l'état de l'imprimante, imprimer une image, ouvrir le tiroir-caisse.
 
-C'est l'un des pilotes de [ecoprint](https://github.com/derricknoutais/ecoprint), l'application qui reconnaît le terminal et imprime les reçus des applications web. Le pilote ZCS, [zcs-print](https://github.com/derricknoutais/zcs-print), a la même forme.
+C'est l'un des pilotes de [Tikéo](https://github.com/derricknoutais/tikeo), l'application qui reconnaît le terminal et imprime les reçus des applications web. Le pilote ZCS, [zcs-print](https://github.com/derricknoutais/zcs-print), a la même forme.
 
-> Jusqu'à la v0.1.0, ce dépôt contenait aussi la partie web (dessin du reçu, envoi à l'application) et l'application Android. Elles vivent désormais dans **ecoprint** : une page web n'a pas à savoir sur quelle marque de terminal elle tourne.
+> Jusqu'à la v0.1.0, ce dépôt contenait aussi la partie web (dessin du reçu, envoi à l'application) et l'application Android. Elles vivent désormais dans **Tikéo** (ex-EcoPrint) : une page web n'a pas à savoir sur quelle marque de terminal elle tourne.
 
 ## Ce qu'il fait
 
@@ -27,7 +27,7 @@ if (imprimante.demarrer()) {                  // faux si l'appareil n'a pas le s
 - **`aUnTiroir()`** : le service ne dit pas si le terminal a une prise de tiroir-caisse. Le pilote le lit dans le modèle — les Sunmi de comptoir (T…, D…) en ont une, les portables (V…, P…, L…) non, sauf le V3 MIX dont la base en a une — et rend `null` pour le MIX, un modèle inconnu ou une autre marque. Sur un portable, `ouvrirTiroir` rend `non-pris-en-charge` sans rien envoyer.
 - Les reçus et le tiroir passent par la même file, un par un : le suivant attend le verdict du précédent.
 
-L'état et le verdict sont du JSON (`org.json`), dans le vocabulaire commun aux pilotes d'ecoprint :
+L'état et le verdict sont du JSON (`org.json`), dans le vocabulaire commun aux pilotes de Tikéo :
 
 | `code` | d'après `updatePrinterState()` |
 |---|---|
@@ -45,7 +45,7 @@ L'état et le verdict sont du JSON (`org.json`), dans le vocabulaire commun aux 
 
 ## Utiliser le pilote
 
-Le module Android est `android/pilote` (espace de noms `com.derricknoutais.sunmiprint`). ecoprint l'inclut directement dans sa construction, depuis un clone voisin :
+Le module Android est `android/pilote` (espace de noms `com.derricknoutais.sunmiprint`). Tikéo l'inclut directement dans sa construction, depuis un clone voisin :
 
 ```kotlin
 // settings.gradle.kts de l'application

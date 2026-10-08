@@ -22,7 +22,7 @@ import java.util.concurrent.atomic.AtomicBoolean
  * d'impression (woyou.aidlservice.jiqiservice).
  *
  * Il dit l'état de l'imprimante, imprime une image et ouvre le tiroir-caisse
- * branché sur le terminal. Il parle le vocabulaire commun aux pilotes d'ecoprint — un état
+ * branché sur le terminal. Il parle le vocabulaire commun aux pilotes de Tikéo — un état
  * `{code, message, largeur, modele}`, un verdict `{ok}` ou
  * `{ok: false, code, message}` —, les codes étant `prete`, `papier`,
  * `surchauffe`, `capot`, `occupee`, `erreur`, `absente`, `delai`, et
